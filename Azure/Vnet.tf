@@ -53,12 +53,19 @@ resource "azurerm_subnet" "private" {
   address_prefixes     = ["10.0.2.0/24"]
 }
 
-# Network Security Group
-resource "azurerm_network_security_group" "nsg" {
-  name                = "networkSG"
+# Network Security Group public
+resource "azurerm_network_security_group" "nsg_public" {
+  name                = "nsg-public"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   
+}
+
+#Network Security Group Private 
+resource "azurerm_network_security_group" "nsg_private" {
+  name                = "nsg-private"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
 }
 
 # NSG Rules (one resource per rule) - inbound
@@ -73,7 +80,7 @@ resource "azurerm_network_security_rule" "allow_ssh" {
   #source_address_prefix       = var.management_cidr
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.rg.name
-  network_security_group_name = azurerm_network_security_group.nsg.name
+  network_security_group_name = azurerm_network_security_group.nsg_public.name
   description                 = "Allow SSH from management network"
 }
 
@@ -88,7 +95,7 @@ resource "azurerm_network_security_rule" "allow_http" {
   source_address_prefix       = "*"
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.rg.name
-  network_security_group_name = azurerm_network_security_group.nsg.name
+  network_security_group_name = azurerm_network_security_group.nsg_public.name
   description                 = "Allow HTTP"
 }
 
@@ -103,7 +110,7 @@ resource "azurerm_network_security_rule" "allow_https" {
   source_address_prefix       = "*"
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.rg.name
-  network_security_group_name = azurerm_network_security_group.nsg.name
+  network_security_group_name = azurerm_network_security_group.nsg_public.name
   description                 = "Allow HTTPS"
 }
 
@@ -119,7 +126,7 @@ resource "azurerm_network_security_rule" "allow_out_all" {
   source_address_prefix       = "*"
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.rg.name
-  network_security_group_name = azurerm_network_security_group.nsg.name
+  network_security_group_name = azurerm_network_security_group.nsg_public.name
   description                 = "Allow all outbound"
 }
 
@@ -129,10 +136,10 @@ resource "azurerm_subnet_network_security_group_association" "public_assoc" {
   network_security_group_id = azurerm_network_security_group.nsg.id
 }
 
-resource "azurerm_subnet_network_security_group_association" "dmz_assoc" {
-  subnet_id                 = azurerm_subnet.dmz.id
-  network_security_group_id = azurerm_network_security_group.nsg.id
-}
+# resource "azurerm_subnet_network_security_group_association" "dmz_assoc" {
+#   subnet_id                 = azurerm_subnet.dmz.id
+#   network_security_group_id = azurerm_network_security_group.nsg.id
+# }
 
 # Route Table
 resource "azurerm_route_table" "rt" {
